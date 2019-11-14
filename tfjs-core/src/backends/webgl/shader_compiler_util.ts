@@ -27,11 +27,17 @@ export function getLogicalCoordinatesFromFlatIndex(
   const strides = util.computeStrides(shape);
   return strides
       .map((stride, i) => {
-        const line1 = `int ${coords[i]} = ${index} / ${stride}`;
+        let l0 = '';
+        if (stride > 65535) {
+           l0 = `int idx${i}1 = 65535; int idx${i}2 = ${stride - 65535};`;
+        } else {
+            l0 = `int idx${i}1 = ${stride}; int idx${i}2 = 0;`;
+        }
+        const line1 = `int ${coords[i]} = ${index} / (idx${i}1 + idx${i}2)`;
         const line2 = i === strides.length - 1 ?
-            `int ${coords[i + 1]} = ${index} - ${coords[i]} * ${stride}` :
-            `index -= ${coords[i]} * ${stride}`;
-        return `${line1}; ${line2};`;
+            `int ${coords[i + 1]} = ${index} - ${coords[i]} * (idx${i}1 + idx${i}2)` :
+            `index -= ${coords[i]} * (idx${i}1 + idx${i}2)`;
+        return `${l0};\n${line1};\n${line2};\n`;
       })
       .join('');
 }
@@ -83,9 +89,18 @@ export function dotify(x: string[], y: string[]): string {
 export function getFlatIndexFrom3D(shape: [number, number, number]): string {
   const strides = util.computeStrides(shape).map(d => d.toString());
 
+    let l0 = '';
+    const stride = parseInt(strides[0]);
+    if (stride > 65535) {
+        l0 = `int idx1 = 65535; int idx2 = ${stride - 65535};`;
+    } else {
+        l0 = `int idx1 = ${stride}; int idx2 = 0;`;
+    }
+  
   return `
   int getFlatIndex(ivec3 coords) {
-    return coords.x * ${strides[0]} + coords.y * ${strides[1]} + coords.z;
+    ${l0};
+    return coords.x * (idx1 + idx2) + coords.y * ${strides[1]} + coords.z;
   }
 `;
 }

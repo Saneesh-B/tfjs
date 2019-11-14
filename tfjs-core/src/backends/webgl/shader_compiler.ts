@@ -401,6 +401,7 @@ function getOutputPacked3DCoords(
                              vec2(${packedTexShape[0]}, ${packedTexShape[1]}));
       int index = resTexRC.x * ${packedTexShape[1]} + resTexRC.y;
 
+
       int b = index / ${texelsInBatch};
       index -= b * ${texelsInBatch};
 
@@ -940,15 +941,27 @@ function getPackedSamplerND(inputInfo: InputInfo): string {
   const valuesPerRow = Math.ceil(shape[rank - 1] / 2);
   let texelsInBatch = valuesPerRow * Math.ceil(shape[rank - 2] / 2);
   let params = `int b, int row, int col`;
-  let index = `b * ${texelsInBatch} + (row / 2) * ${valuesPerRow} + (col / 2)`;
+  let tval = 0;
+  let tmis = 0;
+  let b = false;
+  if (texelsInBatch > 65535) {
+    tval = Math.floor(Math.sqrt(texelsInBatch));
+    tmis = texelsInBatch - (tval * tval);
+    b = true;
+  } else {
+    tval = texelsInBatch;
+  }
+  const tstr = `${b ? '((idx * idx) + ims)' : 'idx'}`;
+  let index = `b * ${tstr} + (row / 2) * ${valuesPerRow} + (col / 2)`;
   for (let b = 2; b < rank - 1; b++) {
     params = `int b${b}, ` + params;
     texelsInBatch *= shape[rank - b - 1];
-    index = `b${b} * ${texelsInBatch} + ` + index;
+    index = `b${b} * ${tstr} + ` + index;
   }
   const glsl = getGlslDifferences();
   return `
     vec4 ${funcName}(${params}) {
+      int idx = ${tval}; int ims = ${tmis};
       int index = ${index};
       int texR = index / ${texNumC};
       int texC = index - texR * ${texNumC};
