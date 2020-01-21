@@ -8,6 +8,7 @@
 |AddN|addN|
 |BiasAdd|add|
 |Div|div|
+|DivNoNan|divNoNan|
 |FloorDiv|floorDiv|
 |FloorMod|mod|
 |Maximum|maximum|
@@ -144,6 +145,7 @@
 |ListDiff|setdiff1dAsync|
 |NonMaxSuppressionV2|nonMaxSuppression|
 |NonMaxSuppressionV3|nonMaxSuppression|
+|NonMaxSuppressionV5|nonMaxSuppression|
 |Where|whereAsync|
 
 ## Operations - Evaluation

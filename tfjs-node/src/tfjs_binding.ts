@@ -55,6 +55,13 @@ export interface TFJSBinding {
   // Remove a SavedModel from memory.
   deleteSavedModel(savedModelId: number): void;
 
+  // Execute a SavedModel with input, returns an array of output TensorMetadata.
+  runSavedModel(
+      savedModelId: number, inputTensorIds: number[], inputOpNames: string,
+      outputOpNames: string): TensorMetadata[];
+
+  getNumOfSavedModels(): number;
+
   isUsingGpuDevice(): boolean;
 
   // TF Types
