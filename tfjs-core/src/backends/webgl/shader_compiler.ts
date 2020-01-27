@@ -443,9 +443,24 @@ function getOutputPackedNDCoords(
 
   for (let b = 2; b < shape.length - 1; b++) {
     texelsInBatchN *= shape[shape.length - b - 1];
+
+    let tval = 0;
+    let tmis = 0;
+    let low = false;
+    if (texelsInBatchN > 65535) {
+      tval = Math.floor(Math.sqrt(texelsInBatchN));
+      tmis = texelsInBatchN - (tval * tval);
+      low = true;
+    } else {
+      tval = texelsInBatchN;
+    }
+
+    const str = low ? `((idx${b} * idx${b}) + imis${b})` : `idx${b}`;
+
     batches = `
-      int b${b} = index / ${texelsInBatchN};
-      index -= b${b} * ${texelsInBatchN};
+      int idx${b}=${tval}; int imis${b}=${tmis};
+      int b${b} = index / ${str};
+      index -= b${b} * ${str};
     ` + batches;
     coords = `b${b}, ` + coords;
   }
